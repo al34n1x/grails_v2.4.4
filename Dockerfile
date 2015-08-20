@@ -33,9 +33,9 @@ RUN /bin/bash && \
     gvm install gradle && \
     gvm install groovy && \
     
-#Set environment variables on the .profile 
-    echo "export ANT_HOME=/usr/share/ant" >> ~/.profile && \
-    echo "export PATH=$PATH:$JAVA_HOME/bin:$GRAILS_HOME/bin:$ANT_HOME/bin:$GRADLE_HOME/bin:$GROOVY/bin" >> ~/.profile && \    
+#Set environment variables
+ENV ANT_HOME /usr/share/ant
+ENV PATH $PATH:$JAVA_HOME/bin:$GRAILS_HOME/bin:$ANT_HOME/bin:$GRADLE_HOME/bin:$GROOVY/bin:$CATALINA_HOME/bin  
 
 #Clean up
     rm -rf /var/lib/apt/lists/*
