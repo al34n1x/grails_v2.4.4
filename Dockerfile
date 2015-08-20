@@ -9,6 +9,25 @@ MAINTAINER Alejandro Casas "casas.alejandro@gmail.com"
 ##################################################################
 
 
+ENV TOMCAT_VERSION 8.0.24
+
+# Set locales
+RUN locale-gen en_GB.UTF-8
+ENV LANG en_GB.UTF-8
+ENV LC_CTYPE en_GB.UTF-8
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    git \
+    build-essential \
+    curl \ 
+    wget \
+    software-properties-common \
+    ant \
+    zip
+
+
 #JDK Installation Process from n3ziniuka5/ubuntu-oracle-jdk Build
 RUN echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections
 RUN echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections
@@ -16,10 +35,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends software-properties-common && \
     add-apt-repository ppa:webupd8team/java && \
     apt-get update && \
-    apt-get install -y --no-install-recommends oracle-java8-installer && \
+    apt-get install -y --no-install-recommends oracle-java8-installer 
 
-#Install additional packages
-    apt-get install -y ant curl zip
 
 #Workaround to use source command that is part of the bash built-in services required for next steps 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
@@ -31,11 +48,42 @@ RUN /bin/bash && \
     source "$HOME/.gvm/bin/gvm-init.sh" && \
     gvm install grails 2.5.1 && \
     gvm install gradle && \
-    gvm install groovy && \
+    gvm install groovy
     
-#Set environment variables on the .profile 
-    echo "export ANT_HOME=/usr/share/ant" >> ~/.profile && \
-    echo "export PATH=$PATH:$JAVA_HOME/bin:$GRAILS_HOME/bin:$ANT_HOME/bin:$GRADLE_HOME/bin:$GROOVY/bin" >> ~/.profile && \    
+# Get Tomcat
+RUN wget --quiet --no-cookies \
+    http://apache.rediris.es/tomcat/tomcat-8/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz -O /tmp/tomcat.tgz
+
+# Uncompress
+RUN tar xzvf /tmp/tomcat.tgz -C /opt && \
+    mv /opt/apache-tomcat-${TOMCAT_VERSION} /opt/tomcat && \
+    rm /tmp/tomcat.tgz
+
+# Remove garbage
+RUN rm -rf /opt/tomcat/webapps/examples && \
+    rm -rf /opt/tomcat/webapps/docs && \
+    rm -rf /opt/tomcat/webapps/ROOT
+
+# Add admin/admin user
+ADD tomcat-users.xml /opt/tomcat/conf/
+
+#Set environment variables
+ENV CATALINA_HOME /opt/tomcat
+ENV ANT_HOME /usr/share/ant
+ENV PATH $PATH:$JAVA_HOME/bin:$GRAILS_HOME/bin:$ANT_HOME/bin:$GRADLE_HOME/bin:$GROOVY/bin:$CATALINA_HOME/bin
+
+#Expose Ports
+EXPOSE 8080
+EXPOSE 8009
+
+#Working Dirs
+VOLUME "/opt/tomcat/webapps"
+WORKDIR /opt/tomcat
 
 #Clean up
-    rm -rf /var/lib/apt/lists/*
+RUN rm -rf /var/lib/apt/lists/*
+
+# Launch Tomcat
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+
+
