@@ -1,4 +1,5 @@
-FROM ubuntu:14.04
+#FROM ubuntu:14.04
+FROM partlab/ubuntu
 MAINTAINER Alejandro Casas "casas.alejandro@gmail.com"
 
 ##################################################################
@@ -50,11 +51,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0xcbcb082a1bb94
     rm -rf /var/lib/apt/lists/* && \
     update-rc.d -f mysql disable
 
-ADD run /usr/local/bin/run
-RUN chmod +x /usr/local/bin/run
-
-
-
+#ADD run /usr/local/bin/run
+#RUN chmod +x /usr/local/bin/run
 
 
 #Workaround to use source command that is part of the bash built-in services required for next steps 
