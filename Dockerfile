@@ -15,6 +15,8 @@ ENV TOMCAT_VERSION 8.0.24
 RUN locale-gen en_GB.UTF-8
 ENV LANG en_GB.UTF-8
 ENV LC_CTYPE en_GB.UTF-8
+ENV DEBIAN_FRONTEND noninteractive
+ENV INITRD No
 
 # Install dependencies
 RUN apt-get update && \
@@ -36,6 +38,23 @@ RUN apt-get update && \
     add-apt-repository ppa:webupd8team/java && \
     apt-get update && \
     apt-get install -y --no-install-recommends oracle-java8-installer 
+
+#Install MariaDB
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0xcbcb082a1bb943db && \
+    echo 'deb http://nwps.ws/pub/mariadb/repo/10.0/ubuntu utopic main' \
+      | tee /etc/apt/sources.list.d/mariadb.list && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y mariadb-server && \
+    sed -i 's/^\(bind-address\s.*\)/# \1/' /etc/mysql/my.cnf && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    update-rc.d -f mysql disable
+
+ADD run /usr/local/bin/run
+RUN chmod +x /usr/local/bin/run
+
+
+
 
 
 #Workaround to use source command that is part of the bash built-in services required for next steps 
@@ -75,15 +94,17 @@ ENV PATH $PATH:$JAVA_HOME/bin:$GRAILS_HOME/bin:$ANT_HOME/bin:$GRADLE_HOME/bin:$G
 #Expose Ports
 EXPOSE 8080
 EXPOSE 8009
+EXPOSE 3306
 
 #Working Dirs
 VOLUME "/opt/tomcat/webapps"
+VOLUME ["/var/lib/mysql"]
 WORKDIR /opt/tomcat
 
 #Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
 # Launch Tomcat
-CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+#CMD ["/opt/tomcat/bin/catalina.sh", "run"]
 
 
