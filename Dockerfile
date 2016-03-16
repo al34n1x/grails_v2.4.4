@@ -97,4 +97,4 @@ RUN /tmp/initdb.sh
 
 RUN /usr/bin/mysqld_safe & \
     sleep 10s &&\
-    echo "use mysql; update user set password=PASSWORD("MY_PASSWORD") where User='root'; FLUSH PRIVILEGES;" | mysql
+    echo "use mysql; update user set password=PASSWORD("password") where User='root'; FLUSH PRIVILEGES;" | mysql
